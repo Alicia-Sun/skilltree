@@ -20,12 +20,9 @@ db = client['SkillTreeDB']
 # \     <id>
 
 
-@app.route("/generate", methods=["POST"])
-def generate():
-    content = request.json
-    db["trees"].insertOne(generateTree(content['topic'], content['skills']))         #Kenny's
-    return {"sucess": True}
-
+# @app.route("/generate", methods=["POST"])
+# def generate():
+    # pass
 
 @app.route("/login", methods=["POST"])
 def login():
@@ -62,19 +59,13 @@ def logout():
     resp.set_cookie("session", "", expires=0)
     return resp
 
-@app.route("/path/<int:id>", methods=["GET"])       #removed "POST"
-def path(id):
-    content = request.json
-    if request.method == "GET":
-        graph = db['graphs'].find_one({"id": id})
-    else:
-        return {"success": False}
-    return
+# @app.route("/path/<int:id>", methods=["GET", "POST"])
+# def path():
+    # pass
 
-@app.route("/node/<int:id>", methods=["POST"])
-def node(id):
-    content = request.json
-    return db['nodes'].find_one({"id": id})
+# @app.route("/node/<int:id>", methods=["POST"])
+# def node():
+    # pass
 
 @app.route("/signup", methods=["POST"])
 def signup():
