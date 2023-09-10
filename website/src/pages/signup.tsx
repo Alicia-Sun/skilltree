@@ -38,7 +38,6 @@ export default function SignupForm() {
         if (res.error) {
           setError(res.error);
         } else {
-          //setIsLoggedIn(true);
           window.location.href = "/";
         }
       },

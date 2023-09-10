@@ -1,3 +1,12 @@
-import { createContext } from "react";
+import { createContext, useContext } from "react";
 
-export const LoginContext = createContext<any>(null);
+type User = {
+  isLoggedIn: boolean;
+};
+
+// @ts-ignore
+export const LoginContext = createContext<User>();
+
+export function useLoginContext() {
+  return useContext(LoginContext);
+}

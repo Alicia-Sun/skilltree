@@ -1,3 +1,5 @@
+import Graph from "@/components/graph";
+import { API_URL } from "@/constants";
 import {
   Modal,
   Button,
@@ -10,6 +12,7 @@ import {
 import { Inter } from "next/font/google";
 import { useState } from "react";
 import { TbBinaryTree2, TbBulb, TbLogout } from "react-icons/tb";
+import { useMutation } from "react-query";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -30,7 +33,8 @@ export default function App() {
             showLearnModal={() => setShowMonad(true)}
           />
         </div>
-        <div>
+        <div className="w-2/5 mx-auto mt-10">
+          <Graph edges={[]} layers={[]} />
           <LearnModal visible={showMonad} setVisible={setShowMonad} />
         </div>
       </div>
@@ -85,8 +89,29 @@ function NewItem(props: { onClick: () => void }) {
 }
 
 function LogoutButton() {
+  const { mutate } = useMutation(
+    () =>
+      fetch(`${API_URL}/logout`, {
+        method: "POST",
+        credentials: "include",
+      }),
+    {
+      onSuccess: async (data) => {
+        const d = await data.body?.getReader().read();
+        const res = JSON.parse(new TextDecoder("utf-8").decode(d?.value));
+        window.location.href = "/";
+      },
+    }
+  );
+
   return (
-    <Btn icon={<TbLogout />} className="text-white bg-red-600 hover:bg-red-700">
+    <Btn
+      icon={<TbLogout />}
+      className="text-white bg-red-600 hover:bg-red-700"
+      onClick={() => {
+        mutate();
+      }}
+    >
       Logout
     </Btn>
   );

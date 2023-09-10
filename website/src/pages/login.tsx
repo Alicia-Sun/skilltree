@@ -15,14 +15,12 @@ import { useMutation } from "react-query";
 
 import { MantineTheme } from "@mantine/core";
 import { API_URL } from "../constants";
-import { LoginContext } from "../context/LoginContext";
 import Link from "next/link";
 
 export default function AuthenticationForm() {
-  const [phone, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  //const { setIsLoggedIn } = useContext(LoginContext);
   const { isLoading, mutate } = useMutation(
     () =>
       fetch(`${API_URL}/login`, {
@@ -30,7 +28,7 @@ export default function AuthenticationForm() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email: phone, password }),
+        body: JSON.stringify({ phone, password }),
         credentials: "include",
       }),
     {
@@ -40,7 +38,7 @@ export default function AuthenticationForm() {
         if (res.error) {
           setError(res.error);
         } else {
-          //setIsLoggedIn(true);
+          window.location.href = "/app";
         }
       },
     }
@@ -51,7 +49,7 @@ export default function AuthenticationForm() {
   };
 
   const handlePhoneChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setEmail(event.currentTarget.value);
+    setPhone(event.currentTarget.value);
   };
 
   const handlePasswordChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -128,7 +126,7 @@ export default function AuthenticationForm() {
           variant="default"
           fullWidth
         >
-          Settings
+          Login
         </Button>
       </Paper>
     </Container>

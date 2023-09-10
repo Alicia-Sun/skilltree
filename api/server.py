@@ -1,16 +1,20 @@
 from typing import Any
 from flask import Flask, request, jsonify, make_response
-from pymongo import MongoClient, InsertOne
+from pymongo import InsertOne
+from pymongo.mongo_client import MongoClient
+from pymongo.server_api import ServerApi
+
+from flask_cors import CORS
 import json
 import uuid
+import ssl
 
 from graph import Graph
 
 app = Flask(__name__)
+CORS(app, supports_credentials=True)
 
-
-
-client = MongoClient("mongodb+srv://skilltree:skilltree@skilltree.mm3cfn3.mongodb.net/?retryWrites=true&w=majority")
+client = MongoClient("mongodb+srv://skilltree:skilltree@skilltree.ukoqkrq.mongodb.net/?retryWrites=true&w=majority", server_api=ServerApi('1'))
 db = client['SkillTreeDB']
 
 
@@ -48,6 +52,22 @@ def generate():
     return {"sucess": True}
 
 
+@app.route("/user", methods=["GET"])
+def user():
+    sessions = db["sessions"]
+    users = db["users"]
+    sessid = request.cookies.get("session")
+
+    session = sessions.find_one({"id": sessid})
+    if session is None:
+        return {"success": False}
+
+    user = users.find_one({"_id": session["user_id"]})
+    if user is None:
+        return {"success": False}
+
+    return {"phone": user["phone"]}
+
 @app.route("/login", methods=["POST"])
 def login():
     content = request.json
@@ -70,14 +90,14 @@ def login():
 
 @app.route("/logout", methods=["POST"])
 def logout():
-    content = request.json
+    sessid = request.cookies.get("session")
     sessions = db["sessions"]
-    session = sessions.find_one({"id": content["session"]})
+    session = sessions.find_one({"id": sessid})
 
     if session is None:
         resp = make_response({"success": False})
     else:
-        sessions.delete_one({"id": content["session"]})
+        sessions.delete_one({"id": sessid})
         resp = make_response({"success": True})
 
     resp.set_cookie("session", "", expires=0)
