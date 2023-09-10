@@ -62,11 +62,14 @@ def generate():
     for node in nodes:
         db["nodes"].insert_one(node)
 
+    ranks = graph.rank_nodes()
+
     obj = {
         "id": objId,
         "user_id": user_id,
         "topic": content['topic'],
         "skills": content['skills'],
+        "ranks": ranks,
         "graph": newGraphObj,
     }
 
@@ -164,6 +167,9 @@ def node(id):
 @app.route("/graphs", methods=["GET"])
 def graphs():
     user_id = get_user_id(request.cookies.get("session"))
+    if user_id is None:
+        return {"success": False}
+
     graphs = list(db["trees"].find({"user_id": user_id}))
     for graph in graphs:
         del graph["_id"]

@@ -27,15 +27,6 @@ class Graph:
         print(desc)
         print("STARTING NOW")
         
-        # for node in self.edges.keys():
-        #     new_node = Node(self.topic, node, self.edges[node], desc[node])
-        #     new_node.generate_links() 
-        #     self.nodes.append(new_node)
-        # #print(new_node.node_topic)
-        #     print(new_node.destinations)
-        #     print(new_node.description)
-        #     print(new_node.links)
-        #     print("DONE WITH ONE")
         return self.edges, desc
 
     def rank_nodes(self):
@@ -43,6 +34,7 @@ class Graph:
                "content" : f"I have a curriculum about {self.topic} in the form of a directed graph. The directed graph is represented by a dictionary in which the keys are topics and the values are lists of topics, and each key-value pair represents edges from the key to each of the elements in its value. An edge from one topic to another denotes that the second topic depends on the first. Please print the curriculum graph in order from most foundational to least foundational, keeping in mind the directed edges. Do this by calling the print_tuples function, which takes a list of tuples as an argument. The topics in each tuple should be roughly the same level of complexity.\n\nHere is the curriculum graph: {self.edges}"}
         ranking = self.session.execute_function_call(msg, 'print_tuples', 3000, 0.2, temp=True)
         print(ranking)
+        return json.loads(ranking)["tuples"]
 
 
 
