@@ -19,23 +19,24 @@ class Graph:
                "content" : f"I want to learn about {self.topic}. I am already familiar with {self.knowledge}. Please help me generate a curriculum in the form of a directed graph of topics I must learn to master {self.topic}. In the graph, each topic should lead to one to three other topics. Limit the maximum length of a path on the graph to five. Stay focused on the topic of {self.topic}. Think step by step."}
         graph = self.session.execute_function_call(msg, 'create_tree', 3000, 0.1)
         self.edges = json.loads(graph)
-        print(self.edges)
+        #print(self.edges)
         msg = {"role" : "user",
                "content" : f"I would like to know more about the following list of education topics: {self.edges.keys()}. These topics are with respect to {self.topic}. Please create a dictionary where the keys are the topics in the list and the values are descriptions of each topic with respect to {self.topic}."}
         desc = self.session.execute_function_call(msg, 'print_dict', 6000, 0.3)
         desc = json.loads(desc)
-        print(desc)
-        print("STARTING NOW")
+        #print(desc)
+        #print("STARTING NOW")
         
-        for node in self.edges.keys():
-            new_node = Node(self.topic, node, self.edges[node], desc[node])
-            new_node.generate_links() 
-            self.nodes.append(new_node)
-            print(new_node.node_topic)
-            print(new_node.destinations)
-            print(new_node.description)
-            print(new_node.links)
-            print("DONE WITH ONE")
+        # for node in self.edges.keys():
+        #     new_node = Node(self.topic, node, self.edges[node], desc[node])
+        #     new_node.generate_links() 
+        #     self.nodes.append(new_node)
+        # #print(new_node.node_topic)
+        #     print(new_node.destinations)
+        #     print(new_node.description)
+        #     print(new_node.links)
+        #     print("DONE WITH ONE")
+        return self.edges, desc
 
     def rank_nodes(self):
         msg = {"role" : "user",
