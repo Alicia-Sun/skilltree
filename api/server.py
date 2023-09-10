@@ -8,6 +8,8 @@ from flask_cors import CORS
 import json
 import uuid
 import ssl
+from copy import deepcopy
+from node import Node
 
 from graph import Graph
 
@@ -30,13 +32,16 @@ def generate():
     content = request.json
     graph = Graph(content['topic'], content['skills'])
     graphObj, description = graph.generate_graph()
-    nodes = list(graph.keys())
-    nodes = [{"name": node, "description": description[node], "id": uuid.uuid4()} for node in nodes]
+    print(graphObj, description)
+    nodes = list(graphObj.keys())
+    objId = str(uuid.uuid4())
+    nodes = [{"name": node, "description": description[node], "id": str(uuid.uuid4()), "graph_id": objId} for node in nodes]
 
     # {
     #   "Node A": ["Node B", "Node C"]
     # }
     nameIdDict = {}
+
     for n in nodes:
         nameIdDict[n['name']] = n['id']
     newGraphObj = {}
@@ -48,8 +53,16 @@ def generate():
     for node in nodes:
         db["nodes"].insert_one(node)
 
-    db["trees"].insert_one(newGraphObj)         
-    return {"sucess": True}
+    obj = {
+        "id": objId,
+        "topic": content['topic'],
+        "skills": content['skills'],
+        "graph": newGraphObj,
+    }
+
+    db["trees"].insert_one(obj)
+    print(newGraphObj)
+    return newGraphObj
 
 
 @app.route("/user", methods=["GET"])
@@ -103,19 +116,38 @@ def logout():
     resp.set_cookie("session", "", expires=0)
     return resp
 
-@app.route("/path/<int:id>", methods=["GET"])       #removed "POST"
+@app.route("/graph/<int:id>", methods=["GET"])       #removed "POST"
 def path(id):
-    content = request.json
     if request.method == "GET":
-        graph = db['graphs'].find_one({"id": id})
+        res = db['trees'].find_one({"id": id})
+        del res['_id']
+        return res
     else:
         return {"success": False}
-    return
 
-@app.route("/node/<int:id>", methods=["POST"])
+@app.route("/node/<string:id>", methods=["GET"])
 def node(id):
-    content = request.json
-    return db['nodes'].find_one({"id": id})
+    args = request.args
+    db_node = db['nodes'].find_one({"id": id})
+    del db_node['_id']
+    if "links" in db_node:
+        return db_node    
+
+
+    graph = db["trees"].find_one({"id": db_node["graph_id"]})
+    desc_ids = graph["graph"][db_node["id"]]
+    descs = []
+    for desc in desc_ids:
+        descs.append(db["nodes"].find_one({"id": desc}))
+
+    node = Node(graph["topic"], db_node["name"], descs, db_node["description"])
+    node.generate_links() 
+
+    db["nodes"].update_one({"id": id}, {"$set": {"links": node.links}})
+    db_node = db['nodes'].find_one({"id": id})
+    del db_node['_id']
+    
+    return db_node
 
 @app.route("/signup", methods=["POST"])
 def signup():

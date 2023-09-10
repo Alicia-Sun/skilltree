@@ -13,7 +13,7 @@ class Node:
         metaphor = Metaphor("020a82a4-0da1-4257-b958-19c6e3d59266") 
         response = metaphor.search(
             "Learn " + self.node_topic + "for" + self.topic,
-            num_results=5,
+            num_results=10,
             use_autoprompt=True,
             type="keyword",
         )
@@ -23,6 +23,10 @@ class Node:
 
         # Print content for each result               
         for content in contents_response.contents:
-            links.append(content.url)
+            links.append({
+                "title": content.title,
+                "extract": content.extract,
+                "url": content.url,
+            })
 
         self.links = links

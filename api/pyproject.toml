@@ -11,6 +11,8 @@ flask = "^2.3.3"
 pymongo = "^4.5.0"
 flask-cors = "^4.0.0"
 certifi = "^2023.7.22"
+openai = "^0.28.0"
+metaphor-python = "^0.1.16"
 
 
 [build-system]
