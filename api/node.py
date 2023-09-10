@@ -10,7 +10,7 @@ class Node:
         self.links = []
         
     def generate_links(self):
-        metaphor = Metaphor("b74b5b72-e2d0-44d5-ac08-ffb5c598c3e1") 
+        metaphor = Metaphor("020a82a4-0da1-4257-b958-19c6e3d59266") 
         response = metaphor.search(
             "Learn " + self.node_topic + "for" + self.topic,
             num_results=5,

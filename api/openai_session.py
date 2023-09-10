@@ -22,6 +22,24 @@ class OpenAISession:
                         }
                     },
                         {
+                        "name": "print_tuples",
+                        "description": "Prints a list of tuples",
+                        "parameters": {
+                            "type": "object",
+                            "properties": {
+                                "tuples_list": {
+                                   "type": "object",
+                                   "description": "List of tuples to be printed."
+                                },
+                            },
+                            "required": [
+                                "tuples_list"
+                            ]
+
+                        }
+                    },
+
+                        {
                         "name": "print_dict",
                         "description": "Prints a dictionary.",
                         "parameters": {
@@ -56,7 +74,21 @@ class OpenAISession:
         self.messages.append(response['choices'][0]['message'])
         return response['choices'][0]['message']['content']
 
-    def execute_function_call(self, msg, function_to_call, max_tokens, temperature):
+    def execute_function_call(self, msg, function_to_call, max_tokens, temperature, **kwargs):
+        if 'temp' in kwargs and kwargs.get('temp') is True:
+            temp_msg = []
+            temp_msg.append(msg)
+            response = openai.ChatCompletion.create(
+                    model='gpt-4',
+                    messages=temp_msg,
+                    functions=self.functions,
+                    function_call={"name" : function_to_call},
+                    max_tokens=max_tokens,
+                    temperature=temperature
+                    )
+            print(response)
+            return response['choices'][0]['message']['function_call']['arguments']
+
         self.messages.append(msg)
         response = openai.ChatCompletion.create(
             model='gpt-4',
@@ -68,3 +100,6 @@ class OpenAISession:
         )
         self.messages.append(response['choices'][0]['message'])
         return response['choices'][0]['message']['function_call']['arguments']
+    
+        
+
