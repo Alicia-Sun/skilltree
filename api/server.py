@@ -4,6 +4,7 @@ from pymongo import MongoClient, InsertOne
 import json
 import uuid
 
+from graph import Graph
 
 app = Flask(__name__)
 
@@ -23,7 +24,27 @@ db = client['SkillTreeDB']
 @app.route("/generate", methods=["POST"])
 def generate():
     content = request.json
-    db["trees"].insertOne(generateTree(content['topic'], content['skills']))         #Kenny's
+    graph = Graph(content['topic'], content['skills'])
+    graphObj, description = graph.generate_graph()
+    nodes = list(graph.keys())
+    nodes = [{"name": node, "description": description[node], "id": uuid.uuid4()} for node in nodes]
+
+    # {
+    #   "Node A": ["Node B", "Node C"]
+    # }
+    nameIdDict = {}
+    for n in nodes:
+        nameIdDict[n['name']] = n['id']
+    newGraphObj = {}
+    for k in graphObj.keys():
+        newGraphObj[nameIdDict[k]] = []
+        for v in graphObj[k]:
+            newGraphObj[nameIdDict[k]].append(nameIdDict[v])
+
+    for node in nodes:
+        db["nodes"].insert_one(node)
+
+    db["trees"].insert_one(newGraphObj)         
     return {"sucess": True}
 
 
@@ -80,9 +101,7 @@ def node(id):
 def signup():
     content = request.json
     collection = db['users']
-    requesting = []
-    requesting.append(InsertOne(content))
-    result = collection.bulk_write(requesting)
+    result = collection.insert_one(content)
     return {"success": True}
 
 
