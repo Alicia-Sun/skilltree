@@ -26,9 +26,18 @@ db = client['SkillTreeDB']
 # \     generate/login/logout/path/node/signup
 # \     <id>
 
+def get_user_id(sessid):
+    sessions = db["sessions"]
+    session = sessions.find_one({"id": sessid})
+    if session is None:
+        return None
+
+    return session["user_id"]
+
 
 @app.route("/generate", methods=["POST"])
 def generate():
+    user_id = get_user_id(request.cookies.get("session"))
     content = request.json
     graph = Graph(content['topic'], content['skills'])
     graphObj, description = graph.generate_graph()
@@ -55,6 +64,7 @@ def generate():
 
     obj = {
         "id": objId,
+        "user_id": user_id,
         "topic": content['topic'],
         "skills": content['skills'],
         "graph": newGraphObj,
@@ -62,7 +72,9 @@ def generate():
 
     db["trees"].insert_one(obj)
     print(newGraphObj)
-    return newGraphObj
+
+    del obj["_id"]
+    return obj
 
 
 @app.route("/user", methods=["GET"])
@@ -75,7 +87,7 @@ def user():
     if session is None:
         return {"success": False}
 
-    user = users.find_one({"_id": session["user_id"]})
+    user = users.find_one({"id": session["user_id"]})
     if user is None:
         return {"success": False}
 
@@ -95,7 +107,7 @@ def login():
         return {"success": False}
 
     sessid = uuid.uuid4()
-    session = sessions.insert_one({"user_id": user["_id"], "id": str(sessid)})
+    session = sessions.insert_one({"user_id": user["id"], "id": str(sessid)})
     resp = make_response({"success": True})
     resp.set_cookie("session", str(sessid))
 
@@ -146,16 +158,29 @@ def node(id):
     db["nodes"].update_one({"id": id}, {"$set": {"links": node.links}})
     db_node = db['nodes'].find_one({"id": id})
     del db_node['_id']
-    
+
     return db_node
+
+@app.route("/graphs", methods=["GET"])
+def graphs():
+    user_id = get_user_id(request.cookies.get("session"))
+    graphs = list(db["trees"].find({"user_id": user_id}))
+    for graph in graphs:
+        del graph["_id"]
+
+    print(graphs)
+    return {"graphs": graphs}
 
 @app.route("/signup", methods=["POST"])
 def signup():
-    content = request.json
     collection = db['users']
-    result = collection.insert_one(content)
+
+    content = request.json
+    content["id"] = str(uuid.uuid4())
+    collection.insert_one(content)
     return {"success": True}
 
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8000, debug=True)
+
